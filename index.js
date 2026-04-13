@@ -5,61 +5,52 @@ import pg from "pg";
 const app = express();
 const port = 3000;
 
-
-
 const db = new pg.Client({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
-db.connect();
 
-db.query("SELECT * FROM capitals",(err,res)=>{
-  if (err){
-    console.error("Error Executing Query",err.stack);
-  }
-  else{
-    quiz=res.rows;
-  }
-  db.end();
-})
-
-
-
-
-
-let quiz = [
-  { country: "France", capital: "Paris" },
-  { country: "United Kingdom", capital: "London" },
-  { country: "United States of America", capital: "New York" },
-];
-
+let quiz = [];
 let totalCorrect = 0;
+let currentQuestion = {};
 
-// Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-let currentQuestion = {};
+async function loadQuizData() {
+  try {
+    await db.connect();
+    const result = await db.query("SELECT * FROM capitals");
+    quiz = result.rows;
+  } catch (err) {
+    console.error(err.stack);
+  }
+}
 
-// GET home page
-app.get("/", async (req, res) => {
+function nextQuestion() {
+  const randomIndex = Math.floor(Math.random() * quiz.length);
+  currentQuestion = quiz[randomIndex];
+}
+
+app.get("/", (req, res) => {
   totalCorrect = 0;
-  await nextQuestion();
-  console.log(currentQuestion);
-  res.render("index.ejs", { question: currentQuestion });
+  nextQuestion();
+  res.render("index.ejs", {
+    question: currentQuestion,
+  });
 });
 
-// POST a new post
 app.post("/submit", (req, res) => {
-  let answer = req.body.answer.trim();
+  const answer = req.body.answer.trim();
   let isCorrect = false;
+
   if (currentQuestion.capital.toLowerCase() === answer.toLowerCase()) {
     totalCorrect++;
-    console.log(totalCorrect);
     isCorrect = true;
   }
 
   nextQuestion();
+
   res.render("index.ejs", {
     question: currentQuestion,
     wasCorrect: isCorrect,
@@ -67,12 +58,16 @@ app.post("/submit", (req, res) => {
   });
 });
 
-async function nextQuestion() {
-  const randomCountry = quiz[Math.floor(Math.random() * quiz.length)];
+app.listen(port, async () => {
+  await loadQuizData();
 
-  currentQuestion = randomCountry;
-}
+  if (quiz.length === 0) {
+    quiz = [
+      { country: "France", capital: "Paris" },
+      { country: "United Kingdom", capital: "London" },
+      { country: "United States of America", capital: "Washington, D.C." },
+    ];
+  }
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
