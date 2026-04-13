@@ -50,7 +50,6 @@ app.post("/submit", (req, res) => {
   }
 
   nextQuestion();
-
   res.render("index.ejs", {
     question: currentQuestion,
     wasCorrect: isCorrect,
@@ -58,7 +57,7 @@ app.post("/submit", (req, res) => {
   });
 });
 
-app.listen(port, async () => {
+async function startServer() {
   await loadQuizData();
 
   if (quiz.length === 0) {
@@ -69,5 +68,9 @@ app.listen(port, async () => {
     ];
   }
 
-  console.log(`Server running at http://localhost:${port}`);
-});
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+}
+
+startServer();
