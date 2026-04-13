@@ -8,7 +8,7 @@ const port = 3000;
 
 
 const db = new pg.Client({
-  connectionString: process.env.postgresql://postgres_f2a9_user:Lq8O87zZH3RtxQxo8Ipi0IRdG6jG7yat@dpg-d7eav9flk1mc73f87u4g-a.virginia-postgres.render.com/postgres_f2a9,
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 db.connect();
