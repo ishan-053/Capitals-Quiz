@@ -7,14 +7,10 @@ const port = 3000;
 
 
 
-const db=new pg.Client({
-user:"postgres",
-host:"Localhost",
-database:"white",
-password:"0512",
-port:5542
+const db = new pg.Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
-
 db.connect();
 
 db.query("SELECT * FROM capitals",(err,res)=>{
